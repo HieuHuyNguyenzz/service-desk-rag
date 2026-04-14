@@ -34,6 +34,7 @@ class JiraClient:
                 "startAt": start_at,
                 "maxResults": max_results,
             }
+            print(f"Fetching Jira tickets: startAt={start_at}, jql={jql}")
             response = requests.get(f"{self.url}/rest/api/2/search", params=params, headers=self.headers)
             if response.status_code == 400:
                 print(f"Jira API 400 Error Response: {response.text}")
