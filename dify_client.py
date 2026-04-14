@@ -17,6 +17,7 @@ class DifyClient:
     def create_document(self, text, title, metadata=None):
         """
         Create a document in Dify Knowledge from text.
+        Each ticket is pushed as a single chunk.
         """
         url = f"{self.base_url}/datasets/{self.dataset_id}/document/create_by_text"
         payload = {
@@ -24,7 +25,11 @@ class DifyClient:
             "text": text,
             "indexing_technique": "high_quality",
             "process_rule": {
-                "mode": "automatic"
+                "mode": "custom",
+                "rules": {
+                    "chunk_length": 100000,
+                    "chunk_overlap": 0
+                }
             },
             "doc_form": "text_model",
             "doc_language": "Vietnamese",
@@ -41,6 +46,7 @@ class DifyClient:
     def update_document(self, document_id, text, name):
         """
         Update an existing document in Dify Knowledge.
+        Each ticket is updated as a single chunk.
         """
         url = f"{self.base_url}/datasets/{self.dataset_id}/documents/{document_id}/update_by_text"
         payload = {
@@ -48,27 +54,15 @@ class DifyClient:
             "text": text,
             "indexing_technique": "high_quality",
             "process_rule": {
-                "mode": "automatic"
+                "mode": "custom",
+                "rules": {
+                    "chunk_length": 100000,
+                    "chunk_overlap": 0
+                }
             }
         }
         response = requests.post(url, json=payload, headers=self.headers)
         if response.status_code == 400:
             print(f"Dify API 400 Error Response (Update): {response.text}")
-        response.raise_for_status()
-        return response.json()
-
-
-
-    def update_document(self, document_id, text):
-        """
-        Update an existing document in Dify Knowledge.
-        """
-        url = f"{self.base_url}/datasets/{self.dataset_id}/documents/{document_id}/update_by_text"
-        payload = {
-            "text": text
-        }
-        response = requests.post(url, json=payload, headers=self.headers)
-        if response.status_code == 400:
-            print(f"Dify API 400 Error Response: {response.text}")
         response.raise_for_status()
         return response.json()
