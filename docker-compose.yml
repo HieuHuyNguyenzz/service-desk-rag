@@ -1,6 +1,10 @@
 services:
   service-desk-rag:
-    build: .
+    build:
+      context: .
+      args:
+        - HTTP_PROXY=http://10.255.249.100:3128
+        - HTTPS_PROXY=http://10.255.249.100:3128
     container_name: service-desk-rag-sync
     env_file:
       - .env
