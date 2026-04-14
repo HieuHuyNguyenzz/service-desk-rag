@@ -16,3 +16,9 @@ services:
     volumes:
       - ./sync_state.json:/app/sync_state.json
     restart: unless-stopped
+    networks:
+      - docker_default
+
+networks:
+  docker_default:
+    external: true
