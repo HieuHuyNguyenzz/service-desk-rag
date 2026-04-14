@@ -32,7 +32,9 @@ class DifyClient:
                 },
                 "pre_processing_rules": {
                     "remove_extra_spaces": True,
-                    "remove_redundant_whitespace": True
+                    "remove_redundant_whitespace": True,
+                    "remove_urls": False,
+                    "remove_emails": False
                 }
             },
             "doc_form": "text_model",
@@ -45,6 +47,13 @@ class DifyClient:
         response = requests.post(url, json=payload, headers=self.headers)
         if response.status_code == 400:
             print(f"Dify API 400 Error Response: {response.text}")
+            # Fallback to automatic mode if custom fails
+            print("Attempting fallback to automatic mode...")
+            payload["process_rule"] = {"mode": "automatic"}
+            response = requests.post(url, json=payload, headers=self.headers)
+            if response.status_code == 400:
+                print(f"Dify API 400 Error Response (Fallback): {response.text}")
+        
         response.raise_for_status()
         return response.json()
 
