@@ -63,7 +63,7 @@ def main():
                 # Update existing document
                 doc_id = state["mapping"][ticket_id]
                 print(f"Updating ticket {ticket_id} (Doc ID: {doc_id})...")
-                dify.update_document(doc_id, content)
+                dify.update_document(doc_id, content, summary)
             else:
                 # Create new document
                 print(f"Creating document for ticket {ticket_id}...")

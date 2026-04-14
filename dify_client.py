@@ -38,12 +38,13 @@ class DifyClient:
         response.raise_for_status()
         return response.json()
 
-    def update_document(self, document_id, text):
+    def update_document(self, document_id, text, name):
         """
         Update an existing document in Dify Knowledge.
         """
         url = f"{self.base_url}/datasets/{self.dataset_id}/documents/{document_id}/update_by_text"
         payload = {
+            "name": name,
             "text": text,
             "indexing_technique": "high_quality",
             "process_rule": {
