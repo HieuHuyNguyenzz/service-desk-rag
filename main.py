@@ -7,7 +7,7 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
-STATE_FILE = "service-desk-rag/sync_state.json"
+STATE_FILE = "sync_state.json"
 
 def load_state():
     if os.path.exists(STATE_FILE):
