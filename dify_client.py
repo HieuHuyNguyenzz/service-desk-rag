@@ -44,20 +44,13 @@ class DifyClient:
         response.raise_for_status()
         return response.json()
 
-    def update_document(self, document_id, text, name):
+    def delete_document(self, document_id):
         """
-        Update an existing document in Dify Knowledge.
+        Delete a document from Dify Knowledge.
         """
-        url = f"{self.base_url}/datasets/{self.dataset_id}/documents/{document_id}/update_by_text"
-        payload = {
-            "name": name,
-            "text": text,
-            "indexing_technique": "high_quality",
-            "doc_form": "text_model",
-            "doc_language": "Vietnamese"
-        }
-        response = requests.post(url, json=payload, headers=self.headers)
+        url = f"{self.base_url}/datasets/{self.dataset_id}/documents/{document_id}"
+        response = requests.delete(url, headers=self.headers)
         if response.status_code == 400:
-            print(f"Dify API 400 Error Response (Update): {response.text}")
+            print(f"Dify API 400 Error Response (Delete): {response.text}")
         response.raise_for_status()
         return response.json()

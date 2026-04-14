@@ -60,16 +60,16 @@ def main():
         
         try:
             if ticket_id in state["mapping"]:
-                # Update existing document
+                # Delete existing document and recreate to ensure 1-chunk setting
                 doc_id = state["mapping"][ticket_id]
-                print(f"Updating ticket {ticket_id} (Doc ID: {doc_id})...")
-                dify.update_document(doc_id, content, summary)
-            else:
-                # Create new document
-                print(f"Creating document for ticket {ticket_id}...")
-                result = dify.create_document(content, summary)
-                doc_id = result.get("document", {}).get("id")
-                state["mapping"][ticket_id] = doc_id
+                print(f"Replacing ticket {ticket_id} (Doc ID: {doc_id})...")
+                dify.delete_document(doc_id)
+                
+            # Create new document
+            print(f"Creating document for ticket {ticket_id}...")
+            result = dify.create_document(content, summary)
+            doc_id = result.get("document", {}).get("id")
+            state["mapping"][ticket_id] = doc_id
         except Exception as e:
             print(f"Failed to sync ticket {ticket_id}: {e}")
 
