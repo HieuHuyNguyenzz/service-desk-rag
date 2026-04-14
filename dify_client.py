@@ -46,20 +46,11 @@ class DifyClient:
     def update_document(self, document_id, text, name):
         """
         Update an existing document in Dify Knowledge.
-        Each ticket is updated as a single chunk.
         """
         url = f"{self.base_url}/datasets/{self.dataset_id}/documents/{document_id}/update_by_text"
         payload = {
             "name": name,
-            "text": text,
-            "indexing_technique": "high_quality",
-            "process_rule": {
-                "mode": "custom",
-                "rules": {
-                    "chunk_length": 10000,
-                    "chunk_overlap": 0
-                }
-            }
+            "text": text
         }
         response = requests.post(url, json=payload, headers=self.headers)
         if response.status_code == 400:
