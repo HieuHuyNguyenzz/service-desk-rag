@@ -21,21 +21,38 @@ class DifyClient:
         url = f"{self.base_url}/datasets/{self.dataset_id}/document/create_by_text"
         payload = {
             "text": text,
-            "indexing_technique": "high_quality",
+            "indexing_technique": "economy",
             "process_rule": {
                 "mode": "automatic"
             }
         }
         if metadata:
-            # Dify might not support arbitrary metadata in create_by_text, 
-            # but we can prepend it to the text or use it if the API supports it.
-            # For now, we ensure the text contains the ID.
             pass
+            
         response = requests.post(url, json=payload, headers=self.headers)
         if response.status_code == 400:
             print(f"Dify API 400 Error Response: {response.text}")
         response.raise_for_status()
         return response.json()
+
+    def update_document(self, document_id, text):
+        """
+        Update an existing document in Dify Knowledge.
+        """
+        url = f"{self.base_url}/datasets/{self.dataset_id}/documents/{document_id}/update_by_text"
+        payload = {
+            "text": text,
+            "indexing_technique": "economy",
+            "process_rule": {
+                "mode": "automatic"
+            }
+        }
+        response = requests.post(url, json=payload, headers=self.headers)
+        if response.status_code == 400:
+            print(f"Dify API 400 Error Response (Update): {response.text}")
+        response.raise_for_status()
+        return response.json()
+
 
 
     def update_document(self, document_id, text):
