@@ -21,7 +21,7 @@ class DifyClient:
         url = f"{self.base_url}/datasets/{self.dataset_id}/document/create_by_text"
         payload = {
             "text": text,
-            "indexing_technique": "economy",
+            "indexing_technique": "high_quality",
             "process_rule": {
                 "mode": "automatic"
             }
@@ -42,7 +42,7 @@ class DifyClient:
         url = f"{self.base_url}/datasets/{self.dataset_id}/documents/{document_id}/update_by_text"
         payload = {
             "text": text,
-            "indexing_technique": "economy",
+            "indexing_technique": "high_quality",
             "process_rule": {
                 "mode": "automatic"
             }
