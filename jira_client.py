@@ -15,8 +15,7 @@ class JiraClient:
 
     def get_tickets(self, project_key, updated_since=None):
         """
-        Fetch tickets from a Jira project.
-        updated_since: date string (e.g., '2023-01-01') to filter updates.
+        Fetch tickets from a Jira project (On-premise/Data Center).
         """
         jql = f'project = "{project_key}"'
         if updated_since:
@@ -31,7 +30,8 @@ class JiraClient:
                 "jql": jql,
                 "startAt": start_at,
                 "maxResults": max_results,
-                "fields": "summary,description,comment,updated,created"
+                "fields": "summary,description,updated,created",
+                "expand": "comments"
             }
             response = requests.get(f"{self.url}/rest/api/2/search", params=params, headers=self.headers)
             response.raise_for_status()
@@ -49,16 +49,19 @@ class JiraClient:
         return tickets
 
     def format_ticket(self, issue):
-        """Format ticket data into a string for Dify knowledge."""
+        """Format ticket data into a string for Dify knowledge (On-premise)."""
         fields = issue.get("fields", {})
         summary = fields.get("summary", "No Summary")
+        
+        # Jira Server description is usually plain text or Wiki Markup string
         description = fields.get("description", "No Description")
-        # Description in Jira API v3 is often ADF (Atlassian Document Format), we might need to simplify it.
-        if isinstance(description, dict):
-            description = self._extract_text_from_adf(description)
-            
-        comments = fields.get("comment", {}).get("comments", [])
-        comments_text = "\n".join([self._extract_text_from_adf(c.get("body", "")) if isinstance(c.get("body"), dict) else c.get("body", "") for c in comments])
+        if not description:
+            description = "No Description"
+
+        # In Jira Server /rest/api/2/search with expand=comments, 
+        # comments are available in fields['comment']['comments']
+        comments_data = fields.get("comment", {}).get("comments", [])
+        comments_text = "\n".join([c.get("body", "") for c in comments_data]) if comments_data else "No comments"
         
         ticket_id = issue.get("key")
         updated = fields.get("updated")
@@ -68,22 +71,3 @@ class JiraClient:
             "updated": updated,
             "content": f"Ticket: {ticket_id}\nSummary: {summary}\nDescription: {description}\n\nComments:\n{comments_text}"
         }
-
-    def _extract_text_from_adf(self, adf):
-        """Basic extractor for Atlassian Document Format."""
-        if not adf or not isinstance(adf, dict):
-            return str(adf)
-        
-        texts = []
-        def walk(node):
-            if isinstance(node, dict):
-                if node.get("type") == "text":
-                    texts.append(node.get("text", ""))
-                for val in node.values():
-                    walk(val)
-            elif isinstance(node, list):
-                for item in node:
-                    walk(item)
-        
-        walk(adf)
-        return " ".join(texts)
