@@ -37,9 +37,18 @@ def main():
     dify = DifyClient()
     state = load_state()
 
-    print(f"Fetching tickets for project {PROJECT_KEY}...")
-    print(f"Sync state - last_sync: {state['last_sync']}")
-    tickets = jira.get_tickets(PROJECT_KEY, updated_since=state["last_sync"])
+    # Determine the sync start date
+    sync_date_override = os.getenv("SYNC_DATE")
+    if sync_date_override:
+        # Ensure it's in a format Jira accepts (YYYY-MM-DD HH:mm)
+        start_date = f"{sync_date_override} 00:00"
+        print(f"Using SYNC_DATE override: {start_date}")
+    else:
+        start_date = state["last_sync"]
+        print(f"Using last sync state: {start_date}")
+
+    print(f"Fetching tickets for project {PROJECT_KEY} since {start_date}...")
+    tickets = jira.get_tickets(PROJECT_KEY, updated_since=start_date)
     
     if not tickets:
         print("No new or updated tickets found.")
