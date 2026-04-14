@@ -19,6 +19,7 @@ JIRA_API_TOKEN=your-jira-api-token
 JIRA_PROJECT_KEY=PROJ
 DIFY_API_KEY=your-dify-api-key
 DIFY_DATASET_ID=your-dify-dataset-id
+DIFY_BASE_URL=https://your-dify-domain/v1
 ```
 
 ### 2. Installation

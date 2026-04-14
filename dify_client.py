@@ -8,7 +8,7 @@ class DifyClient:
     def __init__(self):
         self.api_key = os.getenv("DIFY_API_KEY")
         self.dataset_id = os.getenv("DIFY_DATASET_ID")
-        self.base_url = "https://api.dify.ai/v1" # Change this if using self-hosted Dify
+        self.base_url = os.getenv("DIFY_BASE_URL", "https://api.dify.ai/v1")
         self.headers = {
             "Authorization": f"Bearer {self.api_key}",
             "Content-Type": "application/json"
