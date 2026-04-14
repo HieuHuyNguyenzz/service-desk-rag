@@ -51,7 +51,9 @@ class DifyClient:
         payload = {
             "name": name,
             "text": text,
-            "indexing_technique": "high_quality"
+            "indexing_technique": "high_quality",
+            "doc_form": "text_model",
+            "doc_language": "Vietnamese"
         }
         response = requests.post(url, json=payload, headers=self.headers)
         if response.status_code == 400:
