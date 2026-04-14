@@ -11,10 +11,16 @@ load_dotenv()
 STATE_FILE = "sync_state.json"
 
 def load_state():
+    default_state = {"last_sync": None, "mapping": {}}
     if os.path.exists(STATE_FILE):
-        with open(STATE_FILE, "r") as f:
-            return json.load(f)
-    return {"last_sync": None, "mapping": {}}
+        try:
+            with open(STATE_FILE, "r") as f:
+                loaded_state = json.load(f)
+                if isinstance(loaded_state, dict):
+                    return {**default_state, **loaded_state}
+        except (json.JSONDecodeError, IOError):
+            pass
+    return default_state
 
 def save_state(state):
     with open(STATE_FILE, "w") as f:
