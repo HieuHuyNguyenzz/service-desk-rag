@@ -7,102 +7,47 @@ load_dotenv()
 class DifyClient:
     def __init__(self):
         self.api_key = os.getenv("DIFY_API_KEY")
-        self.dataset_id = os.getenv("DIFY_DATASET_ID")
+        self.workflow_api_key = os.getenv("DIFY_WORKFLOW_API_KEY", self.api_key)
+        self.user_id = os.getenv("DIFY_USER_ID", "service_desk_sync_bot")
         self.base_url = os.getenv("DIFY_BASE_URL", "https://api.dify.ai/v1")
         self.headers = {
             "Authorization": f"Bearer {self.api_key}",
             "Content-Type": "application/json"
         }
+        self.workflow_headers = {
+            "Authorization": f"Bearer {self.workflow_api_key}",
+            "Content-Type": "application/json"
+        }
 
-    def create_document(self, text, title, metadata=None):
+    def upload_file(self, file_path, filename):
         """
-        Create a document in Dify Knowledge from text.
-        Each ticket is pushed as a single chunk.
+        Uploads a file to Dify and returns the file_id.
         """
-        url = f"{self.base_url}/datasets/{self.dataset_id}/document/create_by_text"
+        url = f"{self.base_url}/files/upload"
+        with open(file_path, "rb") as f:
+            files = {"file": (filename, f)}
+            # Note: files parameter in requests overrides the Content-Type header
+            response = requests.post(url, headers={"Authorization": f"Bearer {self.api_key}"}, files=files)
+            response.raise_for_status()
+            return response.json().get("id")
+
+    def run_workflow(self, filename, file_id):
+        """
+        Triggers the Dify Workflow to process the uploaded file.
+        """
+        url = f"{self.base_url}/workflows/run"
         payload = {
-            "name": title,
-            "text": text,
-            "indexing_technique": "high_quality",
-            "process_rule": {
-                "mode": "custom",
-                "rules": {
-                    "chunk_length": 8192,
-                    "chunk_overlap": 0
-                },
-                "pre_processing_rules": {
-                    "remove_extra_spaces": True,
-                    "remove_redundant_whitespace": True,
-                    "remove_urls": False,
-                    "remove_emails": False
+            "inputs": {
+                "filename": filename,
+                "file": {
+                    "type": "document",
+                    "transfer_method": "local_file",
+                    "upload_file_id": file_id
                 }
             },
-            "doc_form": "text_model",
-            "doc_language": "Vietnamese",
+            "response_mode": "blocking",
+            "user": self.user_id
         }
-        if metadata:
-            pass
-            
-        print(f"Attempting to create document with CUSTOM chunking for: {title}")
-        response = requests.post(url, json=payload, headers=self.headers)
-        if response.status_code == 400:
-            print(f"Dify API 400 Error (Custom): {response.text}")
-            print("ATTENTION: Falling back to automatic mode (tickets may be chunked)...")
-            payload["process_rule"] = {"mode": "automatic"}
-            response = requests.post(url, json=payload, headers=self.headers)
-            if response.status_code == 400:
-                print(f"Dify API 400 Error (Fallback): {response.text}")
-        
-        response.raise_for_status()
-        return response.json()
-
-    def update_document(self, document_id, text, name):
-        """
-        Update an existing document in Dify Knowledge.
-        """
-        url = f"{self.base_url}/datasets/{self.dataset_id}/documents/{document_id}/update_by_text"
-        payload = {
-            "name": name,
-            "text": text,
-            "indexing_technique": "high_quality",
-            "process_rule": {
-                "mode": "custom",
-                "rules": {
-                    "chunk_length": 8192,
-                    "chunk_overlap": 0
-                },
-                "pre_processing_rules": {
-                    "remove_extra_spaces": True,
-                    "remove_redundant_whitespace": True,
-                    "remove_urls": False,
-                    "remove_emails": False
-                }
-            }
-        }
-        print(f"Attempting to update document with CUSTOM chunking: {name}")
-        response = requests.post(url, json=payload, headers=self.headers)
-        if response.status_code == 400:
-            print(f"Dify API 400 Error (Custom Update): {response.text}")
-            print("ATTENTION: Falling back to minimal payload for update...")
-            payload = {
-                "name": name,
-                "text": text
-            }
-            response = requests.post(url, json=payload, headers=self.headers)
-            if response.status_code == 400:
-                print(f"Dify API 400 Error (Fallback Update): {response.text}")
-        
-        response.raise_for_status()
-        return response.json()
-
-
-    def delete_document(self, document_id):
-        """
-        Delete a document from Dify Knowledge.
-        """
-        url = f"{self.base_url}/datasets/{self.dataset_id}/documents/{document_id}"
-        response = requests.delete(url, headers=self.headers)
-        if response.status_code == 400:
-            print(f"Dify API 400 Error Response (Delete): {response.text}")
+        response = requests.post(url, json=payload, headers=self.workflow_headers)
         response.raise_for_status()
         return response.json()

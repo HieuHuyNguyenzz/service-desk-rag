@@ -1,5 +1,6 @@
 import json
 import os
+import tempfile
 from datetime import datetime
 from jira_client import JiraClient
 from dify_client import DifyClient
@@ -10,16 +11,10 @@ load_dotenv()
 STATE_FILE = "sync_state.json"
 
 def load_state():
-    default_state = {"last_sync": None, "mapping": {}}
     if os.path.exists(STATE_FILE):
-        try:
-            with open(STATE_FILE, "r") as f:
-                loaded_state = json.load(f)
-                if isinstance(loaded_state, dict):
-                    return {**default_state, **loaded_state}
-        except (json.JSONDecodeError, IOError):
-            pass
-    return default_state
+        with open(STATE_FILE, "r") as f:
+            return json.load(f)
+    return {"last_sync": None, "mapping": {}}
 
 def save_state(state):
     with open(STATE_FILE, "w") as f:
@@ -50,29 +45,35 @@ def main():
     for issue in tickets:
         ticket_data = jira.format_ticket(issue)
         ticket_id = ticket_data["id"]
-        summary = ticket_data["summary"]
         content = ticket_data["content"]
+        summary = ticket_data["summary"]
         updated_time = ticket_data["updated"]
-        
+
         # Update last_sync tracker
         if not latest_updated or updated_time > latest_updated:
             latest_updated = updated_time
-        
+
         try:
-            if ticket_id in state["mapping"]:
-                # Delete existing document and recreate to ensure 1-chunk setting
-                doc_id = state["mapping"][ticket_id]
-                print(f"Replacing ticket {ticket_id} (Doc ID: {doc_id})...")
-                dify.delete_document(doc_id)
-                
-            # Create new document
-            print(f"Creating document for ticket {ticket_id}...")
-            result = dify.create_document(content, summary)
-            doc_id = result.get("document", {}).get("id")
-            state["mapping"][ticket_id] = doc_id
+            print(f"Processing ticket {ticket_id} via Workflow...")
+            
+            # 1. Create a temporary file for the ticket content
+            with tempfile.NamedTemporaryFile(mode='w', suffix='.txt', delete=False, encoding='utf-8') as tmp:
+                tmp.write(content)
+                tmp_path = tmp.name
+            
+            try:
+                filename = f"{ticket_id}.txt"
+                # 2. Upload to Dify
+                file_id = dify.upload_file(tmp_path, filename)
+                # 3. Run Workflow for LLM chunking/processing
+                dify.run_workflow(filename, file_id)
+                print(f"Successfully synced ticket {ticket_id} via workflow.")
+            finally:
+                if os.path.exists(tmp_path):
+                    os.remove(tmp_path)
+                    
         except Exception as e:
             print(f"Failed to sync ticket {ticket_id}: {e}")
-
 
     state["last_sync"] = latest_updated
     save_state(state)
@@ -80,3 +81,4 @@ def main():
 
 if __name__ == "__main__":
     main()
+
