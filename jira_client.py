@@ -1,5 +1,4 @@
 import requests
-from requests.auth import HTTPBasicAuth
 import os
 from dotenv import load_dotenv
 
@@ -8,10 +7,11 @@ load_dotenv()
 class JiraClient:
     def __init__(self):
         self.url = os.getenv("JIRA_URL")
-        self.email = os.getenv("JIRA_EMAIL")
         self.api_token = os.getenv("JIRA_API_TOKEN")
-        self.auth = HTTPBasicAuth(self.email, self.api_token)
-        self.headers = {"Accept": "application/json"}
+        self.headers = {
+            "Accept": "application/json",
+            "Authorization": f"Bearer {self.api_token}"
+        }
 
     def get_tickets(self, project_key, updated_since=None):
         """
@@ -33,7 +33,7 @@ class JiraClient:
                 "maxResults": max_results,
                 "fields": "summary,description,comment,updated,created"
             }
-            response = requests.get(f"{self.url}/rest/api/3/search", params=params, auth=self.auth, headers=self.headers)
+            response = requests.get(f"{self.url}/rest/api/3/search", params=params, headers=self.headers)
             response.raise_for_status()
             data = response.json()
             
