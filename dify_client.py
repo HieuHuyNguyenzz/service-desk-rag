@@ -30,7 +30,10 @@ class DifyClient:
                     "chunk_length": 10000,
                     "chunk_overlap": 0
                 },
-                "pre_processing_rules": {}
+                "pre_processing_rules": {
+                    "remove_extra_spaces": True,
+                    "remove_redundant_whitespace": True
+                }
             },
             "doc_form": "text_model",
             "doc_language": "Vietnamese",
@@ -38,6 +41,7 @@ class DifyClient:
         if metadata:
             pass
             
+        print(f"Payload being sent to Dify: {payload}")
         response = requests.post(url, json=payload, headers=self.headers)
         if response.status_code == 400:
             print(f"Dify API 400 Error Response: {response.text}")
