@@ -7,6 +7,8 @@ load_dotenv()
 class DifyClient:
     def __init__(self):
         self.api_key = os.getenv("DIFY_API_KEY")
+        self.workflow_api_key = os.getenv("DIFY_WORKFLOW_API_KEY", self.api_key)
+        self.user_id = os.getenv("DIFY_USER_ID", "service_desk_sync_bot")
         self.dataset_id = os.getenv("DIFY_DATASET_ID")
         self.base_url = os.getenv("DIFY_BASE_URL", "https://api.dify.ai/v1")
         
