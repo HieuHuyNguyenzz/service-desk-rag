@@ -33,7 +33,7 @@ class JiraClient:
                 "maxResults": max_results,
                 "fields": "summary,description,comment,updated,created"
             }
-            response = requests.get(f"{self.url}/rest/api/3/search", params=params, headers=self.headers)
+            response = requests.get(f"{self.url}/rest/api/2/search", params=params, headers=self.headers)
             response.raise_for_status()
             data = response.json()
             
