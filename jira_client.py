@@ -30,8 +30,6 @@ class JiraClient:
                 "jql": jql,
                 "startAt": start_at,
                 "maxResults": max_results,
-                "fields": "summary,description,updated,created",
-                "expand": "comments"
             }
             response = requests.get(f"{self.url}/rest/api/2/search", params=params, headers=self.headers)
             response.raise_for_status()
