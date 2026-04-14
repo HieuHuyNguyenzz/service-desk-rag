@@ -31,10 +31,12 @@ class DifyClient:
             # but we can prepend it to the text or use it if the API supports it.
             # For now, we ensure the text contains the ID.
             pass
-            
         response = requests.post(url, json=payload, headers=self.headers)
+        if response.status_code == 400:
+            print(f"Dify API 400 Error Response: {response.text}")
         response.raise_for_status()
         return response.json()
+
 
     def update_document(self, document_id, text):
         """
@@ -45,5 +47,7 @@ class DifyClient:
             "text": text
         }
         response = requests.post(url, json=payload, headers=self.headers)
+        if response.status_code == 400:
+            print(f"Dify API 400 Error Response: {response.text}")
         response.raise_for_status()
         return response.json()
