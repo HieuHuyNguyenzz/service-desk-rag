@@ -37,23 +37,36 @@ def main():
     dify = DifyClient()
     state = load_state()
 
-    print(f"Fetching all tickets for project {PROJECT_KEY}...")
-    tickets = jira.get_tickets(PROJECT_KEY)
+    print(f"Fetching tickets for project {PROJECT_KEY}...")
+    print(f"Sync state - last_sync: {state['last_sync']}")
+    tickets = jira.get_tickets(PROJECT_KEY, updated_since=state["last_sync"])
     
     if not tickets:
-        print("No tickets found.")
+        print("No new or updated tickets found.")
         return
 
-    print(f"Found {len(tickets)} tickets from Jira API.")
+    print(f"Found {len(tickets)} new or updated tickets from Jira API.")
 
+    latest_updated = state["last_sync"]
     processed_count = 0
-    failed_count = 0
+    skipped_count = 0
 
     for issue in tickets:
         ticket_data = jira.format_ticket(issue)
         ticket_id = ticket_data["id"]
         content = ticket_data["content"]
         summary = ticket_data["summary"]
+        updated_time = ticket_data["updated"]
+
+        # Only sync if ticket is new or has been updated
+        last_known_update = state["mapping"].get(ticket_id)
+        if last_known_update == updated_time:
+            skipped_count += 1
+            continue
+
+        # Update last_sync tracker
+        if not latest_updated or updated_time > latest_updated:
+            latest_updated = updated_time
 
         try:
             print(f"Processing ticket {ticket_id} via Workflow...")
@@ -70,6 +83,9 @@ def main():
                 # 3. Run Workflow for LLM chunking/processing
                 dify.run_workflow(filename, file_id)
                 print(f"Successfully synced ticket {ticket_id} via workflow.")
+                
+                # Mark as synced in mapping
+                state["mapping"][ticket_id] = updated_time
                 processed_count += 1
             finally:
                 if os.path.exists(tmp_path):
@@ -77,9 +93,10 @@ def main():
                     
         except Exception as e:
             print(f"Failed to sync ticket {ticket_id}: {e}")
-            failed_count += 1
 
-    print(f"Sync Summary: Processed {processed_count}, Failed {failed_count}, Total {len(tickets)}")
+    print(f"Sync Summary: Processed {processed_count}, Skipped {skipped_count}, Total {len(tickets)}")
+    state["last_sync"] = latest_updated
+    save_state(state)
     print("Sync completed successfully.")
 
 if __name__ == "__main__":
