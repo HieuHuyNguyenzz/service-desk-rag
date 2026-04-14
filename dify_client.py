@@ -29,7 +29,8 @@ class DifyClient:
                 "rules": {
                     "chunk_length": 10000,
                     "chunk_overlap": 0
-                }
+                },
+                "pre_processing_rules": {}
             },
             "doc_form": "text_model",
             "doc_language": "Vietnamese",
