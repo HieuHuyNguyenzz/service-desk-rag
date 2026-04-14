@@ -27,7 +27,7 @@ class DifyClient:
             "process_rule": {
                 "mode": "custom",
                 "rules": {
-                    "chunk_length": 10000,
+                    "chunk_length": 8192,
                     "chunk_overlap": 0
                 },
                 "pre_processing_rules": {
@@ -43,19 +43,58 @@ class DifyClient:
         if metadata:
             pass
             
-        print(f"Payload being sent to Dify: {payload}")
+        print(f"Attempting to create document with CUSTOM chunking for: {title}")
         response = requests.post(url, json=payload, headers=self.headers)
         if response.status_code == 400:
-            print(f"Dify API 400 Error Response: {response.text}")
-            # Fallback to automatic mode if custom fails
-            print("Attempting fallback to automatic mode...")
+            print(f"Dify API 400 Error (Custom): {response.text}")
+            print("ATTENTION: Falling back to automatic mode (tickets may be chunked)...")
             payload["process_rule"] = {"mode": "automatic"}
             response = requests.post(url, json=payload, headers=self.headers)
             if response.status_code == 400:
-                print(f"Dify API 400 Error Response (Fallback): {response.text}")
+                print(f"Dify API 400 Error (Fallback): {response.text}")
         
         response.raise_for_status()
         return response.json()
+
+    def update_document(self, document_id, text, name):
+        """
+        Update an existing document in Dify Knowledge.
+        """
+        url = f"{self.base_url}/datasets/{self.dataset_id}/documents/{document_id}/update_by_text"
+        payload = {
+            "name": name,
+            "text": text,
+            "indexing_technique": "high_quality",
+            "process_rule": {
+                "mode": "custom",
+                "rules": {
+                    "chunk_length": 8192,
+                    "chunk_overlap": 0
+                },
+                "pre_processing_rules": {
+                    "remove_extra_spaces": True,
+                    "remove_redundant_whitespace": True,
+                    "remove_urls": False,
+                    "remove_emails": False
+                }
+            }
+        }
+        print(f"Attempting to update document with CUSTOM chunking: {name}")
+        response = requests.post(url, json=payload, headers=self.headers)
+        if response.status_code == 400:
+            print(f"Dify API 400 Error (Custom Update): {response.text}")
+            print("ATTENTION: Falling back to minimal payload for update...")
+            payload = {
+                "name": name,
+                "text": text
+            }
+            response = requests.post(url, json=payload, headers=self.headers)
+            if response.status_code == 400:
+                print(f"Dify API 400 Error (Fallback Update): {response.text}")
+        
+        response.raise_for_status()
+        return response.json()
+
 
     def delete_document(self, document_id):
         """
