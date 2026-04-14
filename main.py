@@ -55,6 +55,11 @@ def main():
         summary = ticket_data["summary"]
         updated_time = ticket_data["updated"]
 
+        # Only sync if ticket is new or has been updated
+        last_known_update = state["mapping"].get(ticket_id)
+        if last_known_update == updated_time:
+            continue
+
         # Update last_sync tracker
         if not latest_updated or updated_time > latest_updated:
             latest_updated = updated_time
@@ -74,6 +79,9 @@ def main():
                 # 3. Run Workflow for LLM chunking/processing
                 dify.run_workflow(filename, file_id)
                 print(f"Successfully synced ticket {ticket_id} via workflow.")
+                
+                # Mark as synced in mapping
+                state["mapping"][ticket_id] = updated_time
             finally:
                 if os.path.exists(tmp_path):
                     os.remove(tmp_path)
