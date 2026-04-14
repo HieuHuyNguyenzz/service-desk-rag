@@ -1,6 +1,8 @@
 import json
 import os
 import tempfile
+import time
+import schedule
 from datetime import datetime
 from jira_client import JiraClient
 from dify_client import DifyClient
@@ -26,7 +28,9 @@ def save_state(state):
     with open(STATE_FILE, "w") as f:
         json.dump(state, f, indent=4)
 
-def main():
+def run_sync():
+    print(f"\n[{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}] Starting synchronization job...")
+    
     # Configuration
     PROJECT_KEY = os.getenv("JIRA_PROJECT_KEY")
     if not PROJECT_KEY:
@@ -106,7 +110,19 @@ def main():
     print(f"Sync Summary: Processed {processed_count}, Skipped {skipped_count}, Total {len(tickets)}")
     state["last_sync"] = latest_updated
     save_state(state)
-    print("Sync completed successfully.")
+    print(f"[{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}] Sync completed successfully.")
+
+def main():
+    # 1. Run immediately on startup
+    run_sync()
+
+    # 2. Schedule to run every day at 00:00
+    schedule.every().day.at("00:00").do(run_sync)
+    print("\nScheduler started. Sync job scheduled for 00:00 every day.")
+
+    while True:
+        schedule.run_pending()
+        time.sleep(60) # Check every minute
 
 if __name__ == "__main__":
     main()
