@@ -14,17 +14,20 @@ class DifyClient:
             "Content-Type": "application/json"
         }
 
-    def create_document(self, text, metadata=None):
+    def create_document(self, text, title, metadata=None):
         """
         Create a document in Dify Knowledge from text.
         """
         url = f"{self.base_url}/datasets/{self.dataset_id}/document/create_by_text"
         payload = {
+            "name": title,
             "text": text,
             "indexing_technique": "high_quality",
             "process_rule": {
                 "mode": "automatic"
-            }
+            },
+            "doc_form": "text_model",
+            "doc_language": "Vietnamese",
         }
         if metadata:
             pass

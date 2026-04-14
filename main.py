@@ -50,13 +50,14 @@ def main():
     for issue in tickets:
         ticket_data = jira.format_ticket(issue)
         ticket_id = ticket_data["id"]
+        summary = ticket_data["summary"]
         content = ticket_data["content"]
         updated_time = ticket_data["updated"]
-
+        
         # Update last_sync tracker
         if not latest_updated or updated_time > latest_updated:
             latest_updated = updated_time
-
+        
         try:
             if ticket_id in state["mapping"]:
                 # Update existing document
@@ -66,11 +67,12 @@ def main():
             else:
                 # Create new document
                 print(f"Creating document for ticket {ticket_id}...")
-                result = dify.create_document(content)
+                result = dify.create_document(content, summary)
                 doc_id = result.get("document", {}).get("id")
                 state["mapping"][ticket_id] = doc_id
         except Exception as e:
             print(f"Failed to sync ticket {ticket_id}: {e}")
+
 
     state["last_sync"] = latest_updated
     save_state(state)

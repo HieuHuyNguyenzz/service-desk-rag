@@ -72,5 +72,6 @@ class JiraClient:
         return {
             "id": ticket_id,
             "updated": updated,
+            "summary": summary,
             "content": f"Ticket: {ticket_id}\nSummary: {summary}\nDescription: {description}\n\nComments:\n{comments_text}"
         }
