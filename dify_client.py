@@ -34,7 +34,7 @@ class DifyClient:
         """
         url = f"{self.base_url}/files/upload"
         with open(file_path, "rb") as f:
-            files = {"file": (filename, f)}
+            files = {"file": (filename, f, "text/plain")}
             # Note: files parameter in requests overrides the Content-Type header
             response = requests.post(url, headers={"Authorization": f"Bearer {self.api_key}"}, files=files)
             response.raise_for_status()
