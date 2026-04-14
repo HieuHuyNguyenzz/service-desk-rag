@@ -50,7 +50,8 @@ class DifyClient:
         url = f"{self.base_url}/datasets/{self.dataset_id}/documents/{document_id}/update_by_text"
         payload = {
             "name": name,
-            "text": text
+            "text": text,
+            "indexing_technique": "high_quality"
         }
         response = requests.post(url, json=payload, headers=self.headers)
         if response.status_code == 400:
