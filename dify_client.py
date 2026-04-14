@@ -27,7 +27,7 @@ class DifyClient:
             "process_rule": {
                 "mode": "custom",
                 "rules": {
-                    "chunk_length": 100000,
+                    "chunk_length": 10000,
                     "chunk_overlap": 0
                 }
             },
@@ -56,7 +56,7 @@ class DifyClient:
             "process_rule": {
                 "mode": "custom",
                 "rules": {
-                    "chunk_length": 100000,
+                    "chunk_length": 10000,
                     "chunk_overlap": 0
                 }
             }
