@@ -19,7 +19,10 @@ class JiraClient:
         """
         jql = f'project = "{project_key}"'
         if updated_since:
-            jql += f' AND updated >= "{updated_since}"'
+            # Jira On-premise requires specific date formats like 'yyyy-MM-dd HH:mm'
+            # Input is typically ISO 8601: '2026-04-14T10:55:01.000+0700'
+            formatted_date = updated_since.replace('T', ' ')[:16]
+            jql += f' AND updated >= "{formatted_date}"'
         
         tickets = []
         start_at = 0
